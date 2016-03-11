@@ -1,0 +1,27 @@
+---
+- name: Create droplet
+  digital_ocean:
+    state: present
+    command: droplet
+    ssh_key_ids: "{{ ssh_key_id }}"
+    name: "{{ item  }}"
+    unique_name: yes
+    api_token: "{{ api_token }}"
+    size_id: "{{ size }}"
+    region_id: "{{ region }}"
+    image_id: "{{ image }}"
+  with_items: "{{ list_of_servers }}"
+  register: "droplets"
+
+- name: Add instance to local host group
+  lineinfile:
+    dest: "{{ inventory_file }}"
+    regexp: "{{ item.regexp }}"
+    line:  "{{ item.line }}"
+    state: present
+  with_items:
+    - { regexp: "^master", line: "master    ansible_host={{droplets.results[0].droplet.ip_address}}"}
+    - { regexp: "^slave01", line: "slave01    ansible_host={{droplets.results[1].droplet.ip_address}}"}
+    - { regexp: "^slave02", line: "slave02    ansible_host={{droplets.results[2].droplet.ip_address}}"}
+
+- meta: refresh_inventory

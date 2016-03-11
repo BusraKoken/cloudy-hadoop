@@ -1,0 +1,23 @@
+---
+- name: Create Droplets
+  hosts: localhost
+  connection: local
+  roles:
+    - create_cluster
+  tags:
+    - create_cluster
+
+- name: Setup Hadoop
+  hosts:
+    - master
+    - slaves
+  roles:
+   - install_hadoop
+  tags:
+    - setup_hadoop
+
+
+
+
+
+

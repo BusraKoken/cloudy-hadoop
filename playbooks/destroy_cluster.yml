@@ -1,0 +1,15 @@
+---
+- name: Droplets
+  hosts: localhost
+  connection: local
+  vars_files:
+    - roles/create_cluster/vars/main.yml
+  tasks:
+    - name: Destroy droplet
+      digital_ocean:
+        api_token: "{{ api_token }}"
+        state: absent
+        command: droplet
+        unique_name: yes
+        name: "{{ item }}"
+      with_items: "{{ list_of_servers }}"

@@ -1,0 +1,11 @@
+---
+# Droplet creation vars
+ssh_key_id: <YOUR SSH FINGERPRINT>
+api_token: <YOUR DIGITALOCEAN API TOKEN>
+size: 1gb
+region: ams2
+image: ubuntu-14-04-x64
+list_of_servers:
+  - master
+  - slave01
+  - slave02

@@ -1,0 +1,6 @@
+{{ master_hostname }}
+{{slaves_hostnames[0]}}
+{{slaves_hostnames[1]}}
+#{% for host in groups['slaves'] %}
+#{{ hostvars[host]['ansible_host'] }}
+#{% endfor %}

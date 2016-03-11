@@ -1,0 +1,131 @@
+---
+
+- name: Add repo for Java
+  apt_repository:
+    repo: 'ppa:webupd8team/java'
+    state: present
+    update_cache: yes
+
+- name: Accept java licenses
+  action: >
+    shell echo 'oracle-java7-installer shared/accepted-oracle-license-v1-1 select true' | debconf-set-selections
+
+
+- name: Install neccessary libraries
+  apt:
+    name: "{{item}}"
+    update_cache: yes
+    cache_valid_time: 604800
+    state: present
+  with_items:
+    -  python-pip
+    -  oracle-java7-installer
+
+- name: Install Python libraries
+  command: pip install pexpect --allow-unverified pexpect
+
+- name: Download Hadoop
+  get_url:
+    url: "{{ mirrors|random }}/hadoop-2.6.0.tar.gz"
+    dest: "/opt/"
+  register: hadoop_tar
+
+- name: Unarchive Hadoop
+  unarchive:
+    src: "/opt/hadoop-2.6.0.tar.gz"
+    dest: "/opt"
+    copy: no
+  when: hadoop_tar | changed
+
+- name: Create a link for hadoop dir
+  file:
+    dest: "{{ hadoop_home }}"
+    src: /opt/hadoop-2.6.0
+    state: link
+
+- file:
+    dest: /opt/hadoop
+    src: "{{ hadoop_home }}"
+    state: link
+
+- name: Export Java Home environment var
+  lineinfile:
+    dest: "{{ hadoop_home }}/etc/hadoop/hadoop-env.sh"
+    regexp: "JAVA_HOME="
+    line: "export JAVA_HOME=/usr/lib/jvm/java-7-oracle"
+
+- name: Create mapred-site config
+  template:
+    src: mapred-site.xml.j2
+    dest: "{{ hadoop_home }}/etc/hadoop/mapred-site.xml"
+    owner: root
+    group: root
+
+
+- name: Create core-site config
+  template:
+    src: core-site.xml.j2
+    dest: "{{ hadoop_home }}/etc/hadoop/core-site.xml"
+    owner: root
+    group: root
+
+
+- name: Create hdfs-site config
+  template:
+    src: hdfs-site.xml.j2
+    dest: "{{ hadoop_home }}/etc/hadoop/hdfs-site.xml"
+    owner: root
+    group: root
+
+- name: Create yarn-site config
+  template:
+    src: yarn-site.xml.j2
+    dest: "{{ hadoop_home }}/etc/hadoop/yarn-site.xml"
+    owner: root
+    group: root
+
+- name: Create necessary directories
+  file:
+    path: "{{item}}"
+    state: directory
+    mode: 0755
+  with_items:
+    - "{{namenode_dir}}"
+    - "{{datanode_dir}}"
+    - "/root/output/"
+
+
+- name: Create masters config
+  template:
+    src: masters
+    dest: "{{ hadoop_home }}/etc/hadoop/masters"
+    owner: root
+    group: root
+
+
+- name: Create slaves config
+  template:
+    src: slaves
+    dest: "{{ hadoop_home }}/etc/hadoop/slaves"
+    owner: root
+    group: root
+
+- name: Remove hdfs leftover
+  command: "rm -rf /tmp/hadoop-root /opt/hdfs/datenode/* /opt/hdfs/namenode/*"
+
+
+- name: Format namenode on master
+  expect:
+    command: "{{ hadoop_home }}/bin/hdfs namenode -format"
+    responses:
+       Re-format: "Y"
+  when: inventory_hostname in groups['master']
+
+
+- name: Start DFS
+  command: "{{ hadoop_home }}/sbin/start-dfs.sh"
+  when: inventory_hostname in groups['master']
+
+- name: Start YARN
+  command: "{{ hadoop_home }}/sbin/start-yarn.sh"
+  when: inventory_hostname in groups['master']

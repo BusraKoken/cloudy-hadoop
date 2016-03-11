@@ -1,0 +1,6 @@
+---
+
+- include: ssh_configuration.yml
+- include: install_hadoop.yml
+- include: run_job.yml
+  when: inventory_hostname in groups['master']
