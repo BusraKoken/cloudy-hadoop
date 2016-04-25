@@ -6,7 +6,7 @@ This Ansible playbook creats servers that will act as a cluster on Digitalocean,
 
 * install ansible [latest version] [ansible-install]. In case of markupsafe does not exist error, install markupsafe python library.
 
-* git clone or zip download [this project] [github-link]
+* git clone or zip download this project
 
 * if you did not do it before, add your ssh key to your [digitalocean profile] [digitalocean-profile-link] 
 
@@ -37,6 +37,5 @@ ansible-playbook destroy_cluster.yml
 * Enjoy.    
 
 [ansible-install]: <http://docs.ansible.com/ansible/intro_installation.html>
-[github-link]: <https://github.com/dobachi/ansible-hadoop>
 [digitalocean-profile-link]: <https://cloud.digitalocean.com/settings/security>
 [digitalocean-api-token]: <https://cloud.digitalocean.com/settings/api/tokens>
