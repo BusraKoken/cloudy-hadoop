@@ -24,4 +24,10 @@
     - { regexp: "^slave01", line: "slave01    ansible_host={{droplets.results[1].droplet.ip_address}}"}
     - { regexp: "^slave02", line: "slave02    ansible_host={{droplets.results[2].droplet.ip_address}}"}
 
+- name: Wait for port 22 to be ready
+  wait_for:
+    port: 22
+    host: "{{droplets.results[2].droplet.ip_address}}"
+    delay: 5
+
 - meta: refresh_inventory
