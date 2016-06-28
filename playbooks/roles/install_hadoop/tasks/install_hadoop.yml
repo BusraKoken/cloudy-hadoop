@@ -7,9 +7,11 @@
     update_cache: yes
 
 - name: Accept java licenses
-  action: >
-    shell echo 'oracle-java7-installer shared/accepted-oracle-license-v1-1 select true' | debconf-set-selections
-
+  debconf: 
+    name: "oracle-java7-installer"
+    question: "shared/accepted-oracle-license-v1-1"
+    vtype: "select"
+    value: "true"
 
 - name: Install neccessary libraries
   apt:
@@ -21,14 +23,19 @@
     -  python-pip
     -  oracle-java7-installer
 
+
 - name: Install Python libraries
-  command: pip install pexpect --allow-unverified pexpect
+  pip:
+    name: pexpect
+
+- file: dest=/opt/ owner=root state=directory mode=0775 recurse=yes
 
 - name: Download Hadoop
   get_url:
     url: "{{ mirrors|random }}/hadoop-2.6.0.tar.gz"
     dest: "/opt/"
   register: hadoop_tar
+  become: True
 
 - name: Unarchive Hadoop
   unarchive:

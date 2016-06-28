@@ -4,27 +4,18 @@
     name: root
     generate_ssh_key: yes
     ssh_key_file: .ssh/id_rsa
+  register: ssh_keys
 
-
-- name: Fetch the ssh keys
-  fetch:
-    src: "/root/.ssh/id_rsa.pub"
-    dest: "/var/tmp/temp-{{ ansible_hostname }}"
-    flat: yes
-
-
-- name: Copy the ssh keys
-  lineinfile:
-    dest: "/root/.ssh/authorized_keys"
-    insertafter: EOF
-    line: "{{item}}"
+- name: Copy ssh keys
+  authorized_key:
+    user: root
+    key: "{{ ssh_keys.ssh_public_key }}"
     state: present
+  delegate_to: "{{item}}"
   with_items:
-    - "{{ lookup('file', '/var/tmp/temp-{{master_hostname}}') }}"
-    - "{{ lookup('file', '/var/tmp/temp-{{slaves_hostnames[0]}}') }}"
-    - "{{ lookup('file', '/var/tmp/temp-{{slaves_hostnames[1]}}') }}"
-  no_log: True
-
+    - "{{ hadoop_master }}"
+    - "{{ hadoop_slaves[0] }}"
+    - "{{ hadoop_slaves[1] }}"
 
 - name: Create /etc/hosts file
   template:
@@ -32,7 +23,6 @@
     dest: "/etc/hosts"
     owner: root
     group: root
-
 
 - name: Create ssh config on master
   template:
