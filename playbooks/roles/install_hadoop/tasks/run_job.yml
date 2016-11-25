@@ -1,5 +1,4 @@
 ---
-
 - name: Copy the files to the master
   copy:
     src: "{{ item }}"
@@ -12,19 +11,20 @@
 - name: Put the text file to HDFS
   command: "{{ hadoop_home }}/bin/hdfs dfs -put -f count_of_monte_cristo.txt /"
 
+- name: Take the date
+  set_fact:
+    date: "{{ lookup('pipe', 'date +%Y%m%d-%H%M') }}"
+
 - name: Run the job
   command: >
            {{ hadoop_home }}/bin/hadoop jar {{ hadoop_home }}/share/hadoop/tools/lib/hadoop-streaming-2.6.0.jar
            -file word_mapper.py -mapper word_mapper.py
            -file word_reduce.py -reducer word_reduce.py
            -input /count_of_monte_cristo.txt
-           -output output_wordcount
-
-- name: Clean output directory
-  command: "rm -rf /root/output/*"
+           -output output_wordcount_{{date}}
 
 - name: Copy the output from HDFS file to local file system
-  command: "{{ hadoop_home }}/bin/hdfs dfs -copyToLocal ./output_wordcount/part-00000 ./output/output"
+  command: "{{ hadoop_home }}/bin/hdfs dfs -copyToLocal ./output_wordcount_{{date}}/part-00000 ./output/output_{{date}}"
 
 
 

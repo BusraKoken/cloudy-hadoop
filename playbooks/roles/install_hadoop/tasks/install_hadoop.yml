@@ -1,5 +1,4 @@
 ---
-
 - name: Add repo for Java
   apt_repository:
     repo: 'ppa:webupd8team/java'
@@ -23,19 +22,23 @@
     -  python-pip
     -  oracle-java7-installer
 
-
 - name: Install Python libraries
   pip:
     name: pexpect
 
-- file: dest=/opt/ owner=root state=directory mode=0775 recurse=yes
+- name: Create an opt library
+  file:
+    dest: "/opt/"
+    owner: "root"
+    state: directory
+    mode: 0775
 
 - name: Download Hadoop
   get_url:
     url: "{{ mirrors|random }}/hadoop-2.6.0.tar.gz"
     dest: "/opt/"
+    timeout: 1000
   register: hadoop_tar
-  become: True
 
 - name: Unarchive Hadoop
   unarchive:
@@ -46,14 +49,13 @@
 
 - name: Create a link for hadoop dir
   file:
-    dest: "{{ hadoop_home }}"
-    src: /opt/hadoop-2.6.0
+    dest: "{{ item.destination }}"
+    src: "{{ item.source }}"
     state: link
-
-- file:
-    dest: /opt/hadoop
-    src: "{{ hadoop_home }}"
-    state: link
+    force: yes
+  with_items:
+    - { destination: '{{ hadoop_home }}', source: '/opt/hadoop-2.6.0'}
+    - { destination: '/opt/hadoop', source: '{{ hadoop_home }}'}
 
 - name: Export Java Home environment var
   lineinfile:
@@ -61,35 +63,17 @@
     regexp: "JAVA_HOME="
     line: "export JAVA_HOME=/usr/lib/jvm/java-7-oracle"
 
-- name: Create mapred-site config
+- name: Create config files
   template:
-    src: mapred-site.xml.j2
-    dest: "{{ hadoop_home }}/etc/hadoop/mapred-site.xml"
+    src: "{{ item.source }}"
+    dest: "{{ item.destination }}"
     owner: root
     group: root
-
-
-- name: Create core-site config
-  template:
-    src: core-site.xml.j2
-    dest: "{{ hadoop_home }}/etc/hadoop/core-site.xml"
-    owner: root
-    group: root
-
-
-- name: Create hdfs-site config
-  template:
-    src: hdfs-site.xml.j2
-    dest: "{{ hadoop_home }}/etc/hadoop/hdfs-site.xml"
-    owner: root
-    group: root
-
-- name: Create yarn-site config
-  template:
-    src: yarn-site.xml.j2
-    dest: "{{ hadoop_home }}/etc/hadoop/yarn-site.xml"
-    owner: root
-    group: root
+  with_items:
+    - { destination: '{{ hadoop_home }}/etc/hadoop/mapred-site.xml', source: 'mapred-site.xml.j2'}
+    - { destination: '{{ hadoop_home }}/etc/hadoop/core-site.xml', source: 'core-site.xml.j2'}
+    - { destination: '{{ hadoop_home }}/etc/hadoop/hdfs-site.xml', source: 'hdfs-site.xml.j2'}
+    - { destination: '{{ hadoop_home }}/etc/hadoop/yarn-site.xml', source: 'yarn-site.xml.j2'}
 
 - name: Create necessary directories
   file:
@@ -101,25 +85,18 @@
     - "{{datanode_dir}}"
     - "/root/output/"
 
-
-- name: Create masters config
+- name: Create master and slave configs
   template:
-    src: masters
-    dest: "{{ hadoop_home }}/etc/hadoop/masters"
+    src: "{{ item.source }}"
+    dest: "{{ item.destination }}"
     owner: root
     group: root
-
-
-- name: Create slaves config
-  template:
-    src: slaves
-    dest: "{{ hadoop_home }}/etc/hadoop/slaves"
-    owner: root
-    group: root
+  with_items:
+    - { destination: '{{ hadoop_home }}/etc/hadoop/masters', source: 'masters'}
+    - { destination: '{{ hadoop_home }}/etc/hadoop/slaves', source: 'slaves'}
 
 - name: Remove hdfs leftover
   command: "rm -rf /tmp/hadoop-root /opt/hdfs/datenode/* /opt/hdfs/namenode/*"
-
 
 - name: Format namenode on master
   expect:
@@ -127,7 +104,6 @@
     responses:
        Re-format: "Y"
   when: inventory_hostname in groups['master']
-
 
 - name: Start DFS
   command: "{{ hadoop_home }}/sbin/start-dfs.sh"

@@ -4,7 +4,7 @@
 <configuration>
 <property>
 	<name>mapreduce.job.tracker</name>
-	<value>{{ hadoop_master }}:5431</value>
+	<value>{{ hadoop_master['host_ip'] }}:5431</value>
 </property>
 <property>
    <name>mapreduce.framework.name</name>

@@ -1,1 +1,1 @@
-{{ master_hostname }}
+{{hadoop_master['host_name']}}

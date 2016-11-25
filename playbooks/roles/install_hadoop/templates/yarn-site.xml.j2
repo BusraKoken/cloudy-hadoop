@@ -13,15 +13,15 @@
 
 <property>
 	<name>yarn.resourcemanager.resource-tracker.address</name>
-	<value>{{ hadoop_master }}:8025</value>
+	<value>{{ hadoop_master['host_ip'] }}:8025</value>
 </property>
 <property>
 	<name>yarn.resourcemanager.scheduler.address</name>
-	<value>{{ hadoop_master }}:8035</value>
+	<value>{{ hadoop_master['host_ip'] }}:8035</value>
 </property>
 <property>
 	<name>yarn.resourcemanager.address</name>
-	<value>{{ hadoop_master }}:8050</value>
+	<value>{{ hadoop_master['host_ip'] }}:8050</value>
 </property>
 
 </configuration>

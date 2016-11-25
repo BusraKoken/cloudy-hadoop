@@ -1,5 +1,4 @@
 ---
-
 - include: ssh_configuration.yml
 - include: install_hadoop.yml
 - include: run_job.yml
